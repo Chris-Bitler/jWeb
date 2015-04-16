@@ -56,15 +56,11 @@ public class PageHandler implements Runnable {
                     httpVersionMismatch();
                     return;
                 }
-                if (!method.equalsIgnoreCase("GET")) {
-                    notGet();
-                    return;
-                }
                 if(!isFileType(page)) {
                     if (server.getHandler(page) != null) {
                         Class handler = server.getHandler(page);
                         Page pageInstance = (Page) handler.newInstance();
-                        pageInstance.init(request, reader, params);
+                        pageInstance.init(method, request, reader, params);
                     } else {
                         error404();
                         return;

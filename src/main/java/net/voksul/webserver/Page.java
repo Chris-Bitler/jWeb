@@ -1,5 +1,6 @@
 package net.voksul.webserver;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.DateUtils;
 
 import java.io.BufferedReader;
@@ -17,15 +18,18 @@ public class Page {
     private HashMap<String, String> headers;
     private HashMap<String, String> cookies;
     private HashMap<String, String> params;
+    private HashMap<String, String> post;
     private HashMap<String, String> cookiesToSet = new HashMap<String, String>();
     private String response = "";
     private HashMap<String,Object> pageParams = new HashMap<String, Object>();
     private Socket socket;
     private BufferedReader reader;
     private BufferedWriter writer;
+    private String method;
 
-    public void init(Socket socket, BufferedReader reader, HashMap<String,String> params) {
+    public void init(String method, Socket socket, BufferedReader reader, HashMap<String,String> params) {
         this.socket = socket;
+        this.method = method;
         this.reader = reader;
         this.params = params;
         try {
@@ -35,19 +39,42 @@ public class Page {
         }
         headers = new HashMap<String, String>();
         cookies = new HashMap<String, String>();
+        post = new HashMap<String, String>();
         String line;
         try {
-            while ((line = reader.readLine()) != "\n" && line != null && line.length() != 0) {
-                String key = line.substring(0, line.indexOf(":"));
-                String value = line.substring(line.indexOf(":") + 1).trim();
-                if (!key.equalsIgnoreCase("Cookie")) {
-                    headers.put(key, value);
-                } else {
-                    String[] cookieSplit = value.split(";");
-                    for (String cookie : cookieSplit) {
-                        String trimmed = cookie.trim();
-                        String[] trimmedSplit = trimmed.split("=");
-                        cookies.put(trimmedSplit[0], trimmedSplit[1]);
+            String lastLine = "";
+                while ((line = reader.readLine()) != null && reader.ready()) {
+                    if(line.equals("") || line.equals("\r\n") || line.equals("\n")) { break; }
+                    if(line.indexOf(":") != -1) {
+                        String key = line.substring(0, line.indexOf(":"));
+                        String value = line.substring(line.indexOf(":") + 1).trim();
+                        if (!key.equalsIgnoreCase("Cookie")) {
+                            headers.put(key, value);
+                        } else {
+                            String[] cookieSplit = value.split(";");
+                            for (String cookie : cookieSplit) {
+                                String trimmed = cookie.trim();
+                                String[] trimmedSplit = trimmed.split("=");
+                                cookies.put(trimmedSplit[0], trimmedSplit[1]);
+                            }
+                        }
+                    }
+                    lastLine = line;
+                }
+            if(method.equalsIgnoreCase("post"))
+            {
+                StringBuilder sb = new StringBuilder();
+                while(reader.ready())
+                {
+                    sb.append((char) reader.read());
+                }
+                String data = sb.toString();
+                for(String part : data.split(":"))
+                {
+                    String[] split = data.split("=",2);
+                    if(split.length == 2)
+                    {
+                        post.put(split[0],split[1]);
                     }
                 }
             }
@@ -164,5 +191,10 @@ public class Page {
     public String get(String key)
     {
         return params.get(key);
+    }
+
+    public String post(String key)
+    {
+        return post.get(key);
     }
 }

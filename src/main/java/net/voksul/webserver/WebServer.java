@@ -15,6 +15,7 @@ import java.util.HashMap;
 
 public class WebServer {
     ServerSocket socket;
+    boolean started = false;
     String ip;
     int port;
     HashMap<String, Class> routes = new HashMap<String, Class>();
@@ -35,7 +36,20 @@ public class WebServer {
         }
     }
 
-    public void start(String keystoreName, String password) throws IOException {
+    public void start() throws Exception {
+        if(started) { throw new Exception("Web server already started."); }
+        started = true;
+        socket = new ServerSocket();
+        socket.bind(new InetSocketAddress(ip, port));
+        while (true) {
+            Socket request = socket.accept();
+            new Thread(new PageHandler(this, request)).start();
+        }
+    }
+
+    public void startWithSSL(String keystoreName, String password) throws Exception {
+        if(started) { throw new Exception("Web server already started."); }
+        started = true;
         socket = new ServerSocket();
         socket.bind(new InetSocketAddress(ip, port));
         try {
