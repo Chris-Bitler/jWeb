@@ -1,5 +1,6 @@
 package net.voksul.webserver;
 
+import net.voksul.webserver.cache.Cache;
 import org.apache.http.impl.bootstrap.SSLServerSetupHandler;
 
 import javax.net.ssl.*;
@@ -41,6 +42,15 @@ public class WebServer {
         started = true;
         socket = new ServerSocket();
         socket.bind(new InetSocketAddress(ip, port));
+        Thread cacheMonitor = new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+                Cache.tick();
+            }
+        });
+        cacheMonitor.start();
+
         while (true) {
             Socket request = socket.accept();
             new Thread(new PageHandler(this, request)).start();
