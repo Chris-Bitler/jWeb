@@ -23,7 +23,7 @@ public class Crytography {
     {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            byte[] hash = digest.digest(text.getBytes("UTF-8"));
+            byte[] hash = digest.digest((text+salt).getBytes("UTF-8"));
             return new String(hash);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -51,7 +51,7 @@ public class Crytography {
     {
         try {
             MessageDigest digest = MessageDigest.getInstance(algorithm);
-            byte[] hash = digest.digest(text.getBytes("UTF-8"));
+            byte[] hash = digest.digest((text+salt).getBytes("UTF-8"));
             return new String(hash);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
